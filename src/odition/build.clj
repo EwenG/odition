@@ -9,7 +9,7 @@
   (let [foreign-libs (-> (io/resource "deps.cljs") slurp read-string :foreign-libs)
         #_#_foreign-libs [(assoc (first foreign-libs) :file "resources/bundle-prod.js")]]
     (build-api/build (io/resource "odition/main.cljs")
-                     {:output-to "site/main.js"
+                     {:output-to "docs/main.js"
                       :output-dir "target/cljs-out"
                       :optimizations :advanced
                       :preloads []
@@ -22,7 +22,7 @@
   #_(exec/exec "cp" {:proc-args ["site-dev/index.html" "site-prod/index.html"]})
   #_(exec/exec "cp" {:proc-args ["-r" "site-dev/mp3" "site-prod/mp3"]})
   (exec/exec "sass" {:proc-args ["--no-source-map" "--style" "compressed"
-                                 "resources/scss/main.scss" "site/main.css"]})
+                                 "resources/scss/main.scss" "docs/main.css"]})
   (clean/clean "target/cljs-out")
   )
 
