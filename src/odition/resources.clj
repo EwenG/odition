@@ -7,11 +7,10 @@
   (slurp (io/resource "acoustic_grand_piano-mp3.json")))
 
 (defmacro sounds-resource []
-  (vec (for [f (file-seq (io/file "site-dev/mp3"))
+  (vec (for [f (file-seq (io/file "docs/mp3"))
              :let [f-name (.getName f)]
              :when (.endsWith f-name ".mp3")]
          (subs f-name 0 (- (count f-name ) (count ".mp3"))))))
-
 
 (defn- get-english-env
   "Returns env vars as a map with clojure keywords and LANGUAGE set to 'en'"
