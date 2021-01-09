@@ -325,9 +325,10 @@
     (doseq [n to-root]
       (play-t root n *time* 0.4))))
 
-(defn play-basic [root scale degrees]
+(defn play-basic [scale degrees]
   (binding [*time* audio-context.currentTime]
-    (let [triad (root->triad root scale)
+    (let [root (with-random-octave (rand-nth scales/chromatic-scale))
+          triad (root->triad root scale)
           note (with-random-octave root (rand-nth degrees))]
       (doseq [note triad]
         (play-t root note *time* 0.4))
@@ -350,8 +351,7 @@
 (defn play-basic-while-listening []
   (async/go
     (let [chan (core/with-play-context
-                 (play-basic {:degree 2 :flat? false :octave 3}
-                             scales/major-scale
+                 (play-basic scales/major-scale
                              scales/chromatic-scale))
           _ (async/<! chan)
           listening-chan @listening-chan]
