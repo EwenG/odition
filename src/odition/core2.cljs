@@ -4,6 +4,7 @@
             [odition.degree :as degree]
             [odition.notes :as notes]
             [odition.scales :as scales]
+            [odition.dictations :as dictations]
             [cljs.core.async :as async])
   (:require-macros [odition.core2 :as core]
                    [odition.resources :as resources]))
@@ -325,19 +326,50 @@
     (doseq [n to-root]
       (play-t root n *time* 0.4))))
 
-(defn play-basic [scale degrees]
+(defn- play-triad [root scale]
+  (core/with-time
+    (let [triad (root->triad root scale)]
+      #_(doseq [note triad]
+        (play-t root note *time* 0.4))
+      (play-t root *time* 1.4))))
+
+(defn- play-basic [scale degrees]
   (binding [*time* audio-context.currentTime]
     (let [root (with-random-octave (rand-nth scales/chromatic-scale))
-          triad (root->triad root scale)
           note (with-random-octave root (rand-nth degrees))]
-      (doseq [note triad]
-        (play-t root note *time* 0.4))
-      (play-t root *time* 1.4)
+      (play-triad root scale)
       (play-t root note *time* 1.4)
       (add-time! *time* 1)
       (play-to-root root scale note)
       (add-time! *time* 1)
       (play-t root note *time* 2))))
+
+(defn- melodic-dictation-degrees [{:keys [root notes] :as dictation}]
+  (let [root (with-random-octave (rand-nth scales/chromatic-scale))
+        notes (vec (for [n notes]
+                    (with-random-octave root n)))]
+    (assoc dictation
+           :root root
+           :notes notes)))
+
+(defn- play-dictation [{:keys [root scale notes]}]
+  (binding [*time* audio-context.currentTime]
+    (play-triad root scale)
+    (doseq [note notes]
+      (play-t root note *time* 1))
+    (add-time! *time* 1)
+    (doseq [note notes]
+      (play-to-root root scale note)
+      (add-time! *time* 0.5))
+    (add-time! *time* 0.5)
+    (doseq [note notes]
+      (play-t root note *time* 1))))
+
+(comment
+  (play-dictation  (-> (get dictations/dictations scales/major-scale-k)
+                       rand-nth
+                       melodic-dictation-degrees))
+  )
 
 (defn- play-context-watch [ch k r o n]
   (when (= n 0)
@@ -368,5 +400,145 @@
 
 (comment
   (listen-basic)
+  (stop)
+  )
+
+(defn play-dictation-while-listening []
+  (async/go
+    (let [dictation (-> (get dictations/dictations2 scales/major-scale-k)
+                        (get 1)
+                        melodic-dictation-degrees)
+          chan (core/with-play-context
+                 (play-dictation dictation))
+          _ (async/<! chan)
+          listening-chan @listening-chan]
+      (when listening-chan
+        (async/put! listening-chan :played)))))
+
+(comment
+  (-> (get dictations/dictations2 scales/major-scale-k)
+      (get 1))
+  )
+
+(defn listen-dictation []
+  (when (compare-and-set! listening-chan nil (async/chan))
+    (async/go-loop []
+      (play-dictation-while-listening)
+      (if (= :stop (async/<! @listening-chan))
+        (reset! listening-chan nil)
+        (recur)))))
+
+(comment
+  (listen-dictation)
+  (stop)
+  )
+
+(defn- play-dictation2 [{:keys [root scale notes]}]
+  (binding [*time* audio-context.currentTime]
+    (play-triad root scale)
+    (doseq [note notes]
+      (play-t root note *time* 1))))
+
+(defn random-dictation []
+  (let [root (with-random-octave (rand-nth scales/chromatic-scale))]
+    {:root root
+     :scale scales/major-scale
+     :notes [(with-random-octave root (rand-nth scales/chromatic-scale))
+             (with-random-octave root (rand-nth scales/chromatic-scale))]}))
+
+(comment
+  (defn random-dictation-2 []
+    (for [degrees (for [d1 scales/chromatic-scale
+                        d2 scales/chromatic-scale
+                        :when (not= d1 d2)]
+                    [d1 d2])]
+      (let [root (with-random-octave (rand-nth scales/chromatic-scale))]
+        {:root root
+         :scale scales/major-scale
+         :notes [(with-random-octave root (nth degrees 0))
+                 (with-random-octave root (nth degrees 1))]})))
+
+  (shuffle (random-dictation-2))
+
+  (count dictations/all-dictations-2)
+  
+  )
+
+(defn- format-root
+  ([dictation]
+   (format-root dictation nil))
+  ([{:keys [root]} opts]
+   (format-note root degree/degree-1 opts)))
+
+(defn- format-nth
+  ([dictation n]
+   (format-nth dictation n nil))
+  ([{:keys [root notes]} n opts]
+   (format-note root (get notes n) opts)))
+
+(defn- play-to-root-nth [{:keys [root scale notes]} n]
+  (binding [*time* audio-context.currentTime]
+    (play-to-root root scale (get notes n))))
+
+(defonce last-rand-int (atom nil))
+
+(defn rand-int2 [n]
+  (loop [r (rand-int n)]
+    (if (and @last-rand-int (= r @last-rand-int))
+      (recur (rand-int n))
+      (reset! last-rand-int r))))
+
+(def nb-dictation 5)
+
+(comment
+  
+  (def the-dictation
+    {:root #odition.notes.Note {:degree 1
+                                :flat? false
+                                :octave 3}
+     :scale scales/major-scale
+     :notes [#odition.notes.Note {:degree 5
+                                  :flat? true
+                                  :octave 3}
+             #odition.notes.Note {:degree 7
+                                  :flat? true
+                                  :octave 3}]})
+  (do
+    (def the-dictation (random-dictation))
+    (play-dictation2 the-dictation)
+    )
+  (do
+    (def the-dictation (nth (take nb-dictation dictations/all-dictations-2) (rand-int2 (count (take nb-dictation dictations/all-dictations-2)))))
+    (play-dictation2 the-dictation)
+    )
+  (play-triad (:root the-dictation) (:scale the-dictation))
+  (play-to-root-nth the-dictation 0)
+  (play-to-root-nth the-dictation 1)
+  (format-nth the-dictation 0 {:force-root degree/degree-1})
+  (format-nth the-dictation 1 {:force-root degree/degree-1})
+  )
+
+(defn play-dictation-2-while-listening []
+  (async/go
+    (let [dictation (nth (take nb-dictation dictations/all-dictations-2) (rand-int2 (count (take nb-dictation dictations/all-dictations-2))))
+          _ (prn [(format-nth dictation 0 {:force-root degree/degree-1})
+                  (format-nth dictation 1 {:force-root degree/degree-1})])
+          chan (core/with-play-context
+                 (play-dictation dictation))
+          _ (async/<! chan)
+          listening-chan @listening-chan]
+      (when listening-chan
+        (async/put! listening-chan :played)))))
+
+(defn listen-dictation-2 []
+  (when (compare-and-set! listening-chan nil (async/chan))
+    (async/go-loop []
+      (play-dictation-2-while-listening)
+      (if (= :stop (async/<! @listening-chan))
+        (reset! listening-chan nil)
+        (recur)))))
+
+(comment
+  (listen-dictation-2)
   (stop)
   )

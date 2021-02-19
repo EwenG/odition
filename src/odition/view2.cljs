@@ -123,8 +123,11 @@
        :basic-training (basic-training)
        :basic-training2 (basic-training2)))))
 
-(defn- listen-clicked [_ _]
+(defn- listen-basic-clicked [_ _]
   (core/listen-basic))
+
+(defn- listen-dictation-clicked [_ _]
+  (core/listen-dictation-2))
 
 (defn- stop-clicked [_ _]
   (core/stop))
@@ -133,15 +136,23 @@
   (h/div
    :class "container"
    (h/div
-   :class ["row" "row-cols-2"]
+   :class ["row" "row-cols-3"]
    (h/div
     :class ["col" "mb-4"]
     (h/button
      :type "button"
      :class ["btn" "btn-primary" "btn-lg" "btn-block"]
      :disabled (boolean listening?)
-     ::m/on [:click listen-clicked]
-     (h/text "Listen")))
+     ::m/on [:click listen-basic-clicked]
+     (h/text "Listen basic")))
+   (h/div
+    :class ["col" "mb-4"]
+    (h/button
+     :type "button"
+     :class ["btn" "btn-primary" "btn-lg" "btn-block"]
+     :disabled (boolean listening?)
+     ::m/on [:click listen-dictation-clicked]
+     (h/text "Listen dictation")))
    (h/div
     :class ["col" "mb-4"]
     (h/button
