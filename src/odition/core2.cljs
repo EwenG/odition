@@ -521,7 +521,7 @@
 (defn play-dictation-2-while-listening []
   (async/go
     (let [dictation (nth (take nb-dictation dictations/all-dictations-2) (rand-int2 (count (take nb-dictation dictations/all-dictations-2))))
-          _ (prn [(format-nth dictation 0 {:force-root degree/degree-1})
+          #_#__ (prn [(format-nth dictation 0 {:force-root degree/degree-1})
                   (format-nth dictation 1 {:force-root degree/degree-1})])
           chan (core/with-play-context
                  (play-dictation dictation))
