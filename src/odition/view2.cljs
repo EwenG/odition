@@ -126,41 +126,62 @@
 (defn- listen-basic-clicked [_ _]
   (core/listen-basic))
 
-(defn- listen-dictation-clicked [_ _]
-  (core/listen-dictation-2))
+(defn- listen-dictation-clicked [_ state]
+  (let [dictation-start (or (:dictation-start @state) 0)
+        dictation-end (or (:dictation-eend @state) 131)]
+    (core/listen-dictation-2 [dictation-start dictation-end])))
 
 (defn- stop-clicked [_ _]
   (core/stop))
 
+(defn dictation-start-changed [e state]
+  (let [v (js/parseInt (.-value (.-target e)))]
+    (swap! state assoc :dictation-start v)))
+
+(defn dictation-end-changed [e state]
+  (let [v (js/parseInt (.-value (.-target e)))]
+    (swap! state assoc :dictation-end v)))
+
 (m/defcomp odition-comp2 [{:keys [listening?] :as state-value}]
-  (h/div
-   :class "container"
-   (h/div
-   :class ["row" "row-cols-3"]
-   (h/div
-    :class ["col" "mb-4"]
-    (h/button
-     :type "button"
-     :class ["btn" "btn-primary" "btn-lg" "btn-block"]
-     :disabled (boolean listening?)
-     ::m/on [:click listen-basic-clicked]
-     (h/text "Listen basic")))
-   (h/div
-    :class ["col" "mb-4"]
-    (h/button
-     :type "button"
-     :class ["btn" "btn-primary" "btn-lg" "btn-block"]
-     :disabled (boolean listening?)
-     ::m/on [:click listen-dictation-clicked]
-     (h/text "Listen dictation")))
-   (h/div
-    :class ["col" "mb-4"]
-    (h/button
-     :type "button"
-     :class ["btn" "btn-primary" "btn-lg" "btn-block"]
-     :disabled (not (boolean listening?))
-     ::m/on [:click stop-clicked]
-     (h/text "Stop"))))))
+  (let [state (m/state)]
+    (h/div
+     :class "container"
+     (h/div
+      :class ["row" "row-cols-3"]
+      (h/div
+       :class ["col" "mb-4"]
+       (h/button
+        :type "button"
+        :class ["btn" "btn-primary" "btn-lg" "btn-block"]
+        :disabled (boolean listening?)
+        ::m/on [:click listen-basic-clicked]
+        (h/text "Listen basic")))
+      (h/div
+       :class ["col" "mb-4"]
+       (h/div
+        (h/button
+         :type "button"
+         :class ["btn" "btn-primary" "btn-lg" "btn-block"]
+         :disabled (boolean listening?)
+         ::m/on [:click listen-dictation-clicked]
+         (h/text "Listen dictation")))
+       (h/div
+        (h/input :type "number"
+                 :min "0"
+                 :value 0
+                 ::m/on [:change dictation-start-changed])
+        (h/input :type "number"
+                 :max "131"
+                 :value 5
+                 ::m/on [:change dictation-end-changed])))
+      (h/div
+       :class ["col" "mb-4"]
+       (h/button
+        :type "button"
+        :class ["btn" "btn-primary" "btn-lg" "btn-block"]
+        :disabled (not (boolean listening?))
+        ::m/on [:click stop-clicked]
+        (h/text "Stop")))))))
 
 (defn patch-root
   ([]

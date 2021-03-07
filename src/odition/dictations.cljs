@@ -1028,12 +1028,12 @@
                          :notes [#odition.notes.Note {
                                                       :degree 2
                                                       :flat? true
-                                                      :octave 1
+                                                      :octave 2
                                                       }
                                  #odition.notes.Note {
                                                       :degree 3
                                                       :flat? false
-                                                      :octave 1
+                                                      :octave 2
                                                       }]}
                         {:root #odition.notes.Note {
                                                     :degree 1
@@ -1338,7 +1338,7 @@
                         {:root #odition.notes.Note {
                                                     :degree 6
                                                     :flat? false
-                                                    :octave 0
+                                                    :octave 1
                                                     }
                          :scale [#odition.notes.Note {
                                                       :degree 1
@@ -2033,7 +2033,7 @@
                                  #odition.notes.Note {
                                                       :degree 5
                                                       :flat? true
-                                                      :octave 1
+                                                      :octave 3
                                                       }]}
                         {:root #odition.notes.Note {
                                                     :degree 3
@@ -2078,7 +2078,7 @@
                          :notes [#odition.notes.Note {
                                                       :degree 2
                                                       :flat? false
-                                                      :octave 1
+                                                      :octave 2
                                                       }
                                  #odition.notes.Note {
                                                       :degree 4
@@ -2128,7 +2128,7 @@
                          :notes [#odition.notes.Note {
                                                       :degree 2
                                                       :flat? false
-                                                      :octave 1
+                                                      :octave 2
                                                       }
                                  #odition.notes.Note {
                                                       :degree 7
@@ -2183,7 +2183,7 @@
                                  #odition.notes.Note {
                                                       :degree 2
                                                       :flat? false
-                                                      :octave 1
+                                                      :octave 4
                                                       }]}
                         {:root #odition.notes.Note {
                                                     :degree 3
@@ -2278,7 +2278,7 @@
                          :notes [#odition.notes.Note {
                                                       :degree 5
                                                       :flat? true
-                                                      :octave 1
+                                                      :octave 2
                                                       }
                                  #odition.notes.Note {
                                                       :degree 1

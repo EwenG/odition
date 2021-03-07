@@ -488,7 +488,8 @@
       (recur (rand-int n))
       (reset! last-rand-int r))))
 
-(def nb-dictation 5)
+(def dictation-bounds [30 35])
+#_[25 30]
 
 (comment
   
@@ -507,8 +508,10 @@
     (def the-dictation (random-dictation))
     (play-dictation2 the-dictation)
     )
+  
   (do
-    (def the-dictation (nth (take nb-dictation dictations/all-dictations-2) (rand-int2 (count (take nb-dictation dictations/all-dictations-2)))))
+    (def dictation-index (rand-int2 (count (subvec dictations/all-dictations-2 (first dictation-bounds) (second dictation-bounds)))))
+    (def the-dictation (nth (subvec dictations/all-dictations-2 (first dictation-bounds) (second dictation-bounds)) dictation-index))
     (play-dictation2 the-dictation)
     )
   (play-triad (:root the-dictation) (:scale the-dictation))
@@ -516,12 +519,16 @@
   (play-to-root-nth the-dictation 1)
   (format-nth the-dictation 0 {:force-root degree/degree-1})
   (format-nth the-dictation 1 {:force-root degree/degree-1})
+
+  ;; 17 23 24 26 28 29
+
   )
 
-(defn play-dictation-2-while-listening []
+(defn play-dictation-2-while-listening [bounds]
   (async/go
-    (let [dictation (nth (take nb-dictation dictations/all-dictations-2) (rand-int2 (count (take nb-dictation dictations/all-dictations-2))))
-          #_#__ (prn [(format-nth dictation 0 {:force-root degree/degree-1})
+    (let [dictation (nth (subvec dictations/all-dictations-2 (first bounds) (second bounds))
+                         (rand-int2 (count (subvec dictations/all-dictations-2 (first bounds) (second bounds)))))
+          _ (prn [(format-nth dictation 0 {:force-root degree/degree-1})
                   (format-nth dictation 1 {:force-root degree/degree-1})])
           chan (core/with-play-context
                  (play-dictation dictation))
@@ -530,13 +537,16 @@
       (when listening-chan
         (async/put! listening-chan :played)))))
 
-(defn listen-dictation-2 []
-  (when (compare-and-set! listening-chan nil (async/chan))
-    (async/go-loop []
-      (play-dictation-2-while-listening)
-      (if (= :stop (async/<! @listening-chan))
-        (reset! listening-chan nil)
-        (recur)))))
+(defn listen-dictation-2
+  ([]
+   (listen-dictation-2 [0 5]))
+  ([bounds]
+   (when (compare-and-set! listening-chan nil (async/chan))
+     (async/go-loop []
+       (play-dictation-2-while-listening bounds)
+       (if (= :stop (async/<! @listening-chan))
+         (reset! listening-chan nil)
+         (recur))))))
 
 (comment
   (listen-dictation-2)
